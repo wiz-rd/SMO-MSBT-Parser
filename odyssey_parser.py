@@ -24,6 +24,22 @@ def insert_str(item, string: str, index: int):
     return string[index:] + item + string[:index]
 
 
+def normalize_output():
+    """
+    Normalizes the output text box by removing
+    duplicate spaces, newlines, and the like.
+    """
+    cleanup_regex = re.compile("(\s\s)")
+    current_output = txt_out.get("1.0", "end-1c")
+    new_output = current_output
+    
+    while "  " in new_output or "\n\n" in new_output:
+        new_output = new_output.replace("  ", " ").replace("\n", " ")
+
+    txt_out.delete("1.0", "end-1c")
+    txt_out.insert("1.0", new_output)
+
+
 def flatten():
     """
     A function to "flatten" the special characters and their indices.
@@ -85,7 +101,7 @@ def cleanup():
     # filter out everything that is either the phrase
     # <null> OR is NOT an (English) alphanumeric
     # character. Punctuation and whitespace are allowed
-    regex_filter_out = re.compile("(?<![<])<null>(?![>])|[^:;,\s\.\!?a-zA-Z0-9]")
+    regex_filter_out = re.compile("(?<![<])<null>(?![>])|[^':;,\s\.\!?a-zA-Z0-9]")
 
     # getting input
     original_text = txt_in.get("1.0", "end-1c")
@@ -139,6 +155,7 @@ def cleanup():
     flatten()
     flatten()
     txt_out.insert("1.0", output_text)
+    normalize_output()
     print(SP_CHAR)
 
 
