@@ -62,19 +62,21 @@ class SMOCleaner(ctk.CTk):
         self.lbl_in = ctk.CTkLabel(self.frame_input, text="Input", font=("TkDefaultFont", FONT_SIZE))
         self.txt_in = ctk.CTkTextbox(self.frame_input, corner_radius=CORNER_RADIUS)
         self.lbl_in.pack()
-        self.txt_in.pack(fill=ctk.BOTH, padx=40, pady=40)
+        self.txt_in.pack(fill=ctk.BOTH, padx=40, pady=10)
 
         # button management
-        self.btn_clean = ctk.CTkButton(self.frame_buttons, text="", corner_radius=10, image=CLEAN_IMG, command=self.cleanup)
-        self.btn_copy = ctk.CTkButton(self.frame_buttons, text="", corner_radius=10, image=COPY_IMG, command=self.copy)
-        self.btn_clean.place(relx=0.35, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
-        self.btn_copy.place(relx=0.65, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
+        self.btn_clean = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=CLEAN_IMG, command=self.cleanup)
+        self.btn_copy = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=COPY_IMG, command=self.copy)
+        self.btn_paste = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=COPY_IMG, command=self.paste_input)
+        self.btn_clean.place(relx=0.25, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
+        self.btn_copy.place(relx=0.50, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
+        self.btn_paste.place(relx=0.75, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
 
         # output management
         self.lbl_out = ctk.CTkLabel(self.frame_output, text="Output", font=("TkDefaultFont", FONT_SIZE))
         self.txt_out = ctk.CTkTextbox(self.frame_output, corner_radius=CORNER_RADIUS)
         self.lbl_out.pack()
-        self.txt_out.pack(fill=ctk.BOTH, padx=40, pady=40)
+        self.txt_out.pack(fill=ctk.BOTH, padx=40, pady=10)
 
         # disabling the output text box so people can't edit it
         # and won't accidentally get their text deleted from here
