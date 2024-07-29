@@ -31,9 +31,12 @@ def insert_str(item, string: str, index: int):
 # ================================
 cln_img_rel = "./Clean.png"
 cpy_img_rel = "./CappyAndPaste.png"
+pst_img_rel = "./ClipBoard.png"
 pil_cln = Image.open(cln_img_rel)
 pil_cpy = Image.open(cpy_img_rel)
+pil_pst = Image.open(pst_img_rel)
 CLEAN_IMG = ctk.CTkImage(pil_cln, pil_cln, (50, 50))
+PASTE_IMG = ctk.CTkImage(pil_pst, pil_pst, (50, 60))
 COPY_IMG = ctk.CTkImage(pil_cpy, pil_cpy, (50, 60))
 
 class SMOCleaner(ctk.CTk):
@@ -67,7 +70,7 @@ class SMOCleaner(ctk.CTk):
         # button management
         self.btn_clean = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=CLEAN_IMG, command=self.cleanup)
         self.btn_copy = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=COPY_IMG, command=self.copy)
-        self.btn_paste = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=COPY_IMG, command=self.paste_input)
+        self.btn_paste = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=PASTE_IMG, command=self.paste_input)
         self.btn_clean.place(relx=0.25, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
         self.btn_copy.place(relx=0.50, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
         self.btn_paste.place(relx=0.75, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
