@@ -1,6 +1,8 @@
 #!/usr/bin/python3
 # standard libraries
 import re
+import os
+import sys
 from tkinter import PhotoImage
 
 # third party libraries
@@ -27,12 +29,34 @@ def insert_str(item, string: str, index: int):
     return string[index:] + item + string[:index]
 
 
+
+# -----------
+# to fix a py-to-exe issue
+# -----------
+
+def resource_path(relative_path):
+    """ Get absolute path to resource, works for dev and for PyInstaller """
+    try:
+        # PyInstaller creates a temp folder and stores path in _MEIPASS
+        base_path = sys._MEIPASS
+    except Exception:
+        base_path = os.path.abspath(".")
+
+    return os.path.join(base_path, relative_path)
+
+# -----------
+# end of code
+# -----------
+# massive thank you to
+# https://stackoverflow.com/a/13790741
+
+
 # ================================
 # = Setting up classes
 # ================================
-cln_img_rel = "./Clean.png"
-cpy_img_rel = "./CappyAndPaste.png"
-pst_img_rel = "./ClipBoard.png"
+cln_img_rel = resource_path("./Clean.png")
+cpy_img_rel = resource_path("./CappyAndPaste.png")
+pst_img_rel = resource_path("./ClipBoard.png")
 pil_cln = Image.open(cln_img_rel)
 pil_cpy = Image.open(cpy_img_rel)
 pil_pst = Image.open(pst_img_rel)
