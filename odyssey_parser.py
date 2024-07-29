@@ -1,6 +1,7 @@
 #!/usr/bin/python3
 # standard libraries
 import re
+from tkinter import PhotoImage
 
 # third party libraries
 from PIL import Image
@@ -46,8 +47,6 @@ class SMOCleaner(ctk.CTk):
         self.grid_rowconfigure(0, weight=1)
         self.grid_columnconfigure(0, weight=1)
 
-        # CLEAN_IMG = PhotoImage(file=cln_img_rel)
-        # COPY_IMG = PhotoImage(file=cpy_img_rel)
         CORNER_RADIUS = 10
         FONT_SIZE = 25
 
@@ -107,10 +106,6 @@ class SMOCleaner(ctk.CTk):
 
         self.txt_out.delete("1.0", "end-1c")
         self.txt_out.insert("1.0", new_output)
-
-        # self.textbox = ctk.CTkTextbox(master=self, width=400, corner_radius=CORNER_RADIUS)
-        # self.textbox.grid(row=0, column=0, sticky="nsew")
-        # self.textbox.insert("0.0", "Some example text!\n" * 50)
 
     def cleanup(self):
         """
