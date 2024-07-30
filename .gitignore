@@ -1,2 +1,4 @@
 venv/
 output/
+.mypy_cache/
+__pycache__/

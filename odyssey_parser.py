@@ -6,20 +6,26 @@ import sys
 from tkinter import PhotoImage
 
 # third party libraries
-from PIL import Image
-import customtkinter as ctk
+from PIL import Image, ImageTk  # type: ignore
+import customtkinter as ctk  # type: ignore
+
+# helper files
+from icons import ENCODING_DICTIONARY, DECODING_DICTIONARY
 
 # ================================
 # = Setting const and global variables
 # ================================
 
-VERSION = "1.0"
+VERSION = "1.2"
 
 SCHEME = "dark"
 THEME = f"{SCHEME}-blue"
 
 ctk.set_appearance_mode(SCHEME)
 ctk.set_default_color_theme(THEME)
+
+
+IMAGES_DIR = "images"
 
 
 def insert_str(item, string: str, index: int):
@@ -54,9 +60,9 @@ def resource_path(relative_path):
 # ================================
 # = Setting up classes
 # ================================
-cln_img_rel = resource_path("./Clean.png")
-cpy_img_rel = resource_path("./CappyAndPaste.png")
-pst_img_rel = resource_path("./ClipBoard.png")
+cln_img_rel = resource_path(os.path.join(IMAGES_DIR, "Clean.png"))
+cpy_img_rel = resource_path(os.path.join(IMAGES_DIR, "CappyAndPaste.png"))
+pst_img_rel = resource_path(os.path.join(IMAGES_DIR, "ClipBoard.png"))
 pil_cln = Image.open(cln_img_rel)
 pil_cpy = Image.open(cpy_img_rel)
 pil_pst = Image.open(pst_img_rel)
@@ -91,7 +97,7 @@ class SMOCleaner(ctk.CTk):
         self.txt_in.pack(fill=ctk.BOTH, padx=40, pady=10)
 
         # button management
-        self.btn_clean = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=CLEAN_IMG, command=self.cleanup)
+        self.btn_clean = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=CLEAN_IMG, command=self.encode)
         self.btn_copy = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=COPY_IMG, command=self.copy)
         self.btn_paste = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=PASTE_IMG, command=self.paste_input)
         self.btn_clean.place(relx=0.25, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
@@ -100,13 +106,14 @@ class SMOCleaner(ctk.CTk):
 
         # output management
         self.lbl_out = ctk.CTkLabel(self.frame_output, text="Output", font=("TkDefaultFont", FONT_SIZE))
-        self.txt_out = ctk.CTkTextbox(self.frame_output, corner_radius=CORNER_RADIUS)
+        self.txt_out_icons = ctk.CTkTextbox(self.frame_output, corner_radius=CORNER_RADIUS)
+        self.txt_out_editable = ctk.CTkTextbox(self.frame_output, corner_radius=CORNER_RADIUS)
         self.lbl_out.pack()
-        self.txt_out.pack(fill=ctk.BOTH, padx=40, pady=10)
+        self.txt_out_icons.pack(fill=ctk.BOTH, padx=40, pady=10)
 
         # disabling the output text box so people can't edit it
         # and won't accidentally get their text deleted from here
-        self.txt_out.configure(state="disabled")
+        self.txt_out_icons.configure(state="disabled")
 
         # grid-ing everything in order
         self.frame_header.place(relx=0, rely=0, relwidth=1, relheight=0.1)
@@ -122,21 +129,21 @@ class SMOCleaner(ctk.CTk):
         duplicate spaces, newlines, and the like.
         """
         # remove double spaces and newlines
-        current_output = self.txt_out.get("1.0", "end-1c")
+        current_output = self.txt_out_icons.get("1.0", "end-1c")
         new_output = current_output
         
         while "  " in new_output or "\n\n" in new_output:
             new_output = new_output.replace("  ", " ").replace("\n", " ")
 
-        self.txt_out.delete("1.0", "end-1c")
-        self.txt_out.insert("1.0", new_output)
+        self.txt_out_icons.delete("1.0", "end-1c")
+        self.txt_out_icons.insert("1.0", new_output)
 
     def cleanup(self):
         """
         Uses Regex to remove all non-alphanumeric
         characters from the input string. Doesn't remove punctuation.
         """
-        self.txt_out.configure(state="normal")
+        self.txt_out_icons.configure(state="normal")
         # note: this only works for English (which is fine in this context)
         # but if you need other languages, use "".join([i for i in INPUT if i.isalpha()])
 
@@ -148,12 +155,12 @@ class SMOCleaner(ctk.CTk):
         # getting input
         original_text = self.txt_in.get("1.0", "end-1c")
         # clearing output
-        self.txt_out.delete("1.0", "end-1c")
+        self.txt_out_icons.delete("1.0", "end-1c")
         # actually cleaning output
         output_text = regex_filter_out.sub("", original_text)
 
-        self.txt_out.insert("1.0", output_text)
-        self.txt_out.configure(state="disabled")
+        self.txt_out_icons.insert("1.0", output_text)
+        self.txt_out_icons.configure(state="disabled")
         self.normalize()
     
     def copy(self):
@@ -161,13 +168,59 @@ class SMOCleaner(ctk.CTk):
         Copies the output text to the user's clipboard.
         """
         self.clipboard_clear()
-        self.clipboard_append(self.txt_out.get("0.0", "end-1c"))
+        self.clipboard_append(self.txt_out_icons.get("0.0", "end-1c"))
     
     def paste_input(self):
         """
         Pastest the user's clipboard to the input text box.
         """
         self.txt_in.insert("end", self.clipboard_get())
+
+    def add_icon(self, line_num, index, image_path):
+        """
+        Adds an image, named "icon" in this context,
+        to the given line (row) and index (column).
+        """
+        pil_img = Image.open(image_path)
+        img = ctk.CTkImage(pil_img, pil_img)
+        # img = ImageTk.PhotoImage(file=image_path)
+        # self.txt_out_icons._textbox.image_create(f"{line_num}.{index}", image=img)
+        self.txt_out_icons._textbox.window_create(f"{line_num}.{index}", window = ctk.CTkLabel(self.txt_out_icons, image = img, text=""))
+
+    def encode(self):
+        """
+        A method to replace specific icon strings
+        with special characters. This is intended
+        to be able to support icon rendering later.
+        """
+        self.txt_out_icons.configure(state="normal")
+        output_text_editable = self.txt_in.get("1.0", ctk.END)
+
+        # encoding the string
+        for value in ENCODING_DICTIONARY.values():
+            output_text_editable = output_text_editable.replace(value["kuriimu"], value["char"])
+
+        print(output_text_editable)
+
+        output_text_icons = output_text_editable
+
+        # removing all special characters from icon output only
+        for ch in DECODING_DICTIONARY:
+            output_text_icons = output_text_icons.replace(ch, "")
+
+        # swapping encoded chars for icons
+        for line_num, line in enumerate(output_text_editable.splitlines(), start=1):
+            for letter_num, letter in enumerate(line):
+                if letter in DECODING_DICTIONARY:
+ 
+                    # clearing the output here so that
+                    # adding the icons won't cause any problems
+                    self.txt_out_icons.delete("1.0", ctk.END)
+                    self.txt_out_icons.insert("1.0", output_text_icons)
+
+                    self.add_icon(line_num, letter_num, resource_path(os.path.join(IMAGES_DIR, "amiibo.png"))) # f"{DECODING_DICTIONARY[letter]}.webp")))
+
+        self.txt_out_icons.configure(state="disabled")
 
 
 # ================================
