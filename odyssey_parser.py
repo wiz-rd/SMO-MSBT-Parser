@@ -16,7 +16,7 @@ from icons import ENCODING_DICTIONARY, DECODING_DICTIONARY
 # = Setting const and global variables
 # ================================
 
-VERSION = "1.2"
+VERSION = "1.9"
 
 SCHEME = "dark"
 THEME = f"{SCHEME}-blue"
@@ -181,11 +181,24 @@ class SMOCleaner(ctk.CTk):
         Adds an image, named "icon" in this context,
         to the given line (row) and index (column).
         """
+        # setting the max size
+        # this should allow images to be rescaled
+        # BUT maintain their aspect ratio
+        icon_max_size = 28, 28
         pil_img = Image.open(image_path)
-        img = ctk.CTkImage(pil_img, pil_img)
+        pil_img.thumbnail(icon_max_size)
+
+        img = ctk.CTkImage(pil_img, pil_img, pil_img.size)
         # img = ImageTk.PhotoImage(file=image_path)
         # self.txt_out_icons._textbox.image_create(f"{line_num}.{index}", image=img)
         self.txt_out_icons._textbox.window_create(f"{line_num}.{index}", window = ctk.CTkLabel(self.txt_out_icons, image = img, text=""))
+
+        text_behind = self.txt_out_icons.get("1.0", f"{line_num}.{index}")
+        text_ahead = self.txt_out_icons.get(f"{line_num}.{index}", ctk.END)
+        print(f"Putting image here ({line_num}.{index}):", text_behind, "-----------", text_ahead, sep="\n")
+
+        # ensuring the image isn't garbage collected
+        setattr(self.txt_out_icons, f"{line_num}_{index}", img)
 
     def encode(self):
         """
@@ -193,32 +206,46 @@ class SMOCleaner(ctk.CTk):
         with special characters. This is intended
         to be able to support icon rendering later.
         """
+        icon_indices = []
         self.txt_out_icons.configure(state="normal")
         output_text_editable = self.txt_in.get("1.0", ctk.END)
 
-        # encoding the string
+        # encoding the string for ease of parsing later
+        # and so it can be edited by the user
         for value in ENCODING_DICTIONARY.values():
             output_text_editable = output_text_editable.replace(value["kuriimu"], value["char"])
 
-        print(output_text_editable)
-
+        # equate the two so _icons can be modified
         output_text_icons = output_text_editable
 
-        # removing all special characters from icon output only
-        for ch in DECODING_DICTIONARY:
-            output_text_icons = output_text_icons.replace(ch, "")
+        # for each row in the input
+        # (because tkinter is silly like that)
+        for i_row, row in enumerate(output_text_editable.splitlines()):
+            # and each character in each row
+            for i_ch, ch in enumerate(row):
+                   # if the character is one of ours
+                   if ch in DECODING_DICTIONARY:
+                        # append it's coords into a list of all characters found
+                        icon_indices.append((ch, i_row, i_ch))
+
+        # performing this again instead of using the previous loop
+        # because a once-through of the dictionary is less resource
+        # hogging than calling replace() for every (even duplicate) char found
+        for sp_ch in DECODING_DICTIONARY:
+            output_text_icons = output_text_icons.replace(sp_ch, "")
+
+        # clearing the output here so that
+        # adding the icons won't cause any problems
+        self.txt_out_icons.delete("1.0", ctk.END)
+        self.txt_out_icons.insert("1.0", output_text_icons)
 
         # swapping encoded chars for icons
-        for line_num, line in enumerate(output_text_editable.splitlines(), start=1):
+        # essentially, the exact same as grabbing each index
+        for line_num, line in enumerate(output_text_editable.splitlines()):
+            line_num += 1
             for letter_num, letter in enumerate(line):
                 if letter in DECODING_DICTIONARY:
- 
-                    # clearing the output here so that
-                    # adding the icons won't cause any problems
-                    self.txt_out_icons.delete("1.0", ctk.END)
-                    self.txt_out_icons.insert("1.0", output_text_icons)
-
-                    self.add_icon(line_num, letter_num, resource_path(os.path.join(IMAGES_DIR, "amiibo.png"))) # f"{DECODING_DICTIONARY[letter]}.webp")))
+                    self.add_icon(line_num, letter_num, resource_path(os.path.join(IMAGES_DIR, f"{DECODING_DICTIONARY[letter]}.png")))
 
         self.txt_out_icons.configure(state="disabled")
 
