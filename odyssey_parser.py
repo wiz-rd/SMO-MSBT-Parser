@@ -121,6 +121,7 @@ class SMOCleaner(ctk.CTk):
         self.frame_buttons.place(relx=0, rely=0.4, relwidth=1, relheight=0.2)
         self.frame_output.place(relx=0, rely=0.6, relwidth=1, relheight=0.5)
 
+        self.title(f"SMO Cleaner v{VERSION} - Have a lovely day!")
         self.geometry("600x800")
 
     def normalize(self):
