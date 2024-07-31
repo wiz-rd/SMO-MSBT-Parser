@@ -23,8 +23,18 @@ THEME = f"{SCHEME}-blue"
 ctk.set_appearance_mode(SCHEME)
 ctk.set_default_color_theme(THEME)
 
-
 IMAGES_DIR = "images"
+
+# some bytes that the cleanup grep string
+# would allow if they weren't included.
+# using a list and then converting it to a string
+# for ease of viewing and modfication
+MISSED_BYTES = "".join([
+    "",
+    "",
+    "",
+    "",
+])
 
 
 def insert_str(item, string: str, index: int):
@@ -131,7 +141,7 @@ class SMOCleaner(ctk.CTk):
         """
         # remove double spaces and newlines
         while "  " in text or "\n\n" in text:
-            text = text.replace("  ", " ").replace("\n", " ")
+            text = text.replace("  ", " ").replace("\n\n", "\n")
 
         return text
 
@@ -150,7 +160,8 @@ class SMOCleaner(ctk.CTk):
         # used specifically for adding icons.
         spcl_chars = list(ENC_AND_DEC.values())
         spcl_str = "".join(spcl_chars)
-        regex_filter_out = re.compile(f"(?<![<])<null>(?![>])|[^{spcl_str}':;,\s\.\!?a-zA-Z0-9]")
+
+        regex_filter_out = re.compile(f"(?<![<])<null>(?![>])|[^{spcl_str}':;,\s\.\!?a-zA-Z0-9]|[{MISSED_BYTES}]")
 
         # actually cleaning output
         output_text = regex_filter_out.sub(" ", text)
@@ -187,8 +198,6 @@ class SMOCleaner(ctk.CTk):
         # img = ImageTk.PhotoImage(file=image_path)
         # self.txt_out_icons._textbox.image_create(f"{line_num}.{index}", image=img)
         self.txt_out_icons._textbox.window_create(f"{line_num}.{index}", window = ctk.CTkLabel(self.txt_out_icons, image = img, text=""))
-
-        print(line_num, index)
 
         # ensuring the image isn't garbage collected
         setattr(self.txt_out_icons, f"{line_num}_{index}", img)

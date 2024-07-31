@@ -25,6 +25,8 @@ ENC_AND_DEC = bidict({
     "Globe": "Ꝍ",
     "Purple": "Ꝕ",
     "Checkpoint": "ↆ",
+    "Odyssey": "Ơ",
+    "Coin": "Ȼ",
 })
 
 ENCODING_DICTIONARY = \
@@ -145,13 +147,6 @@ ENCODING_DICTIONARY = \
         "bytes": b"A",
         "char": ENC_AND_DEC["Globe"],
     },
-    "Globe": {
-        "val": [],
-        "ign": [],
-        "kuriimu": "<null>A<null>",
-        "bytes": b"A",
-        "char": ENC_AND_DEC["Globe"],
-    },
     "Purple": {
         "val": [],
         "ign": [],
@@ -166,11 +161,18 @@ ENCODING_DICTIONARY = \
         "bytes": b"B",
         "char": ENC_AND_DEC["Checkpoint"],
     },
-    "Checkpoint": {
+    "Odyssey": {
         "val": [],
         "ign": [],
-        "kuriimu": "<null>B<null>",
-        "bytes": b"B",
-        "char": ENC_AND_DEC["Checkpoint"],
+        "kuriimu": "\x0a<null>J<null>",
+        "bytes": b"\x0aJ",
+        "char": ENC_AND_DEC["Odyssey"],
     },
+    "Coin": {
+        "val": [],
+        "ign": [],
+        "kuriimu": "<null><null>@<null>",
+        "bytes": b"@",
+        "char": ENC_AND_DEC["Coin"],
+    }
 }
