@@ -3,20 +3,19 @@
 import re
 import os
 import sys
-from tkinter import PhotoImage
 
 # third party libraries
-from PIL import Image, ImageTk  # type: ignore
+from PIL import Image  # type: ignore
 import customtkinter as ctk  # type: ignore
 
 # helper files
-from icons import ENCODING_DICTIONARY, DECODING_DICTIONARY
+from icons import ENCODING_DICTIONARY, ENC_AND_DEC
 
 # ================================
 # = Setting const and global variables
 # ================================
 
-VERSION = "1.9"
+VERSION = "1.9.5"
 
 SCHEME = "dark"
 THEME = f"{SCHEME}-blue"
@@ -79,6 +78,7 @@ class SMOCleaner(ctk.CTk):
 
         CORNER_RADIUS = 10
         FONT_SIZE = 25
+        self.SP_CHAR = {}
 
         # frames in order of appearance
         self.frame_header = ctk.CTkFrame(self)
@@ -97,7 +97,7 @@ class SMOCleaner(ctk.CTk):
         self.txt_in.pack(fill=ctk.BOTH, padx=40, pady=10)
 
         # button management
-        self.btn_clean = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=CLEAN_IMG, command=self.encode)
+        self.btn_clean = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=CLEAN_IMG, command=self.add_icons)
         self.btn_copy = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=COPY_IMG, command=self.copy)
         self.btn_paste = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=PASTE_IMG, command=self.paste_input)
         self.btn_clean.place(relx=0.25, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
@@ -124,45 +124,39 @@ class SMOCleaner(ctk.CTk):
         self.title(f"SMO Cleaner v{VERSION} - Have a lovely day!")
         self.geometry("600x800")
 
-    def normalize(self):
+    def normalize(self, text: str):
         """
-        Normalizes the output text box by removing
+        Normalizes the provided text box by removing
         duplicate spaces, newlines, and the like.
         """
         # remove double spaces and newlines
-        current_output = self.txt_out_icons.get("1.0", "end-1c")
-        new_output = current_output
-        
-        while "  " in new_output or "\n\n" in new_output:
-            new_output = new_output.replace("  ", " ").replace("\n", " ")
+        while "  " in text or "\n\n" in text:
+            text = text.replace("  ", " ").replace("\n", " ")
 
-        self.txt_out_icons.delete("1.0", "end-1c")
-        self.txt_out_icons.insert("1.0", new_output)
+        return text
 
-    def cleanup(self):
+    def cleanup(self, text: str):
         """
         Uses Regex to remove all non-alphanumeric
-        characters from the input string. Doesn't remove punctuation.
+        characters from the given string. Doesn't remove punctuation.
         """
-        self.txt_out_icons.configure(state="normal")
         # note: this only works for English (which is fine in this context)
         # but if you need other languages, use "".join([i for i in INPUT if i.isalpha()])
 
         # filter out everything that is either the phrase
         # <null> OR is NOT an (English) alphanumeric
         # character. Punctuation and whitespace are allowed
-        regex_filter_out = re.compile("(?<![<])<null>(?![>])|[^':;,\s\.\!?a-zA-Z0-9]")
+        # BUT it does NOT filter out the special characters
+        # used specifically for adding icons.
+        spcl_chars = list(ENC_AND_DEC.values())
+        spcl_str = "".join(spcl_chars)
+        regex_filter_out = re.compile(f"(?<![<])<null>(?![>])|[^{spcl_str}':;,\s\.\!?a-zA-Z0-9]")
 
-        # getting input
-        original_text = self.txt_in.get("1.0", "end-1c")
-        # clearing output
-        self.txt_out_icons.delete("1.0", "end-1c")
         # actually cleaning output
-        output_text = regex_filter_out.sub("", original_text)
+        output_text = regex_filter_out.sub(" ", text)
+        output_text = self.normalize(output_text)
 
-        self.txt_out_icons.insert("1.0", output_text)
-        self.txt_out_icons.configure(state="disabled")
-        self.normalize()
+        return output_text
     
     def copy(self):
         """
@@ -194,45 +188,42 @@ class SMOCleaner(ctk.CTk):
         # self.txt_out_icons._textbox.image_create(f"{line_num}.{index}", image=img)
         self.txt_out_icons._textbox.window_create(f"{line_num}.{index}", window = ctk.CTkLabel(self.txt_out_icons, image = img, text=""))
 
-        text_behind = self.txt_out_icons.get("1.0", f"{line_num}.{index}")
-        text_ahead = self.txt_out_icons.get(f"{line_num}.{index}", ctk.END)
-        print(f"Putting image here ({line_num}.{index}):", text_behind, "-----------", text_ahead, sep="\n")
+        print(line_num, index)
 
         # ensuring the image isn't garbage collected
         setattr(self.txt_out_icons, f"{line_num}_{index}", img)
 
-    def encode(self):
+    def encode(self, text_to_encode: str):
         """
-        A method to replace specific icon strings
-        with special characters. This is intended
-        to be able to support icon rendering later.
+        Convert the given string to the special characters
+        in the custom encoding map. That way, when I clean up the text
+        I can deliberately ignore and skip those characters.
         """
-        icon_indices = []
-        self.txt_out_icons.configure(state="normal")
-        output_text_editable = self.txt_in.get("1.0", ctk.END)
-
         # encoding the string for ease of parsing later
         # and so it can be edited by the user
         for value in ENCODING_DICTIONARY.values():
-            output_text_editable = output_text_editable.replace(value["kuriimu"], value["char"])
+            text_to_encode = text_to_encode.replace(value["kuriimu"], value["char"]) # type: ignore
+        
+        return text_to_encode
+
+    def add_icons(self):
+        """
+        Replaces specific special characters
+        with icons in one of the output strings.
+        """
+        # first, encode
+        input_text = self.txt_in.get("1.0", ctk.END)
+        self.txt_out_icons.configure(state="normal")
+        encoded_text = self.encode(input_text)
+
+        # then, remove all unwanted special chars
+        cleaned_text = self.cleanup(encoded_text)
 
         # equate the two so _icons can be modified
-        output_text_icons = output_text_editable
+        output_text_icons = cleaned_text
 
-        # for each row in the input
-        # (because tkinter is silly like that)
-        for i_row, row in enumerate(output_text_editable.splitlines()):
-            # and each character in each row
-            for i_ch, ch in enumerate(row):
-                   # if the character is one of ours
-                   if ch in DECODING_DICTIONARY:
-                        # append it's coords into a list of all characters found
-                        icon_indices.append((ch, i_row, i_ch))
-
-        # performing this again instead of using the previous loop
-        # because a once-through of the dictionary is less resource
-        # hogging than calling replace() for every (even duplicate) char found
-        for sp_ch in DECODING_DICTIONARY:
+        # replacing each special character with nothing in the output text
+        for sp_ch in ENC_AND_DEC.values():
             output_text_icons = output_text_icons.replace(sp_ch, "")
 
         # clearing the output here so that
@@ -242,11 +233,15 @@ class SMOCleaner(ctk.CTk):
 
         # swapping encoded chars for icons
         # essentially, the exact same as grabbing each index
-        for line_num, line in enumerate(output_text_editable.splitlines()):
-            line_num += 1
+
+        # I have to use .split() instead of .splitlines() because
+        # Nintendo - who knows why, again - chose to have some
+        # newline-esque characters that cause .splitlines() to separate
+        # them into different items in the list, breaking icon placement
+        for line_num, line in enumerate(cleaned_text.split("\n"), start=1):
             for letter_num, letter in enumerate(line):
-                if letter in DECODING_DICTIONARY:
-                    self.add_icon(line_num, letter_num, resource_path(os.path.join(IMAGES_DIR, f"{DECODING_DICTIONARY[letter]}.png")))
+                if letter in ENC_AND_DEC.values():
+                    self.add_icon(line_num, letter_num, resource_path(os.path.join(IMAGES_DIR, f"{ENC_AND_DEC.inverse[letter]}.png")))
 
         self.txt_out_icons.configure(state="disabled")
 
