@@ -179,3 +179,10 @@ ENCODING_DICTIONARY = \
         "char": ENC_AND_DEC["Coin"],
     }
 }
+
+MOTD = [
+    "Have a wonderful day!",
+    "Editing some text I see",
+    "Code, code, code",
+    "SMO is best game"
+]

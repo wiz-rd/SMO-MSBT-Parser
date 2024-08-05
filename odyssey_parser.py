@@ -3,19 +3,20 @@
 import re
 import os
 import sys
+import random
 
 # third party libraries
 from PIL import Image  # type: ignore
 import customtkinter as ctk  # type: ignore
 
 # helper files
-from icons import ENCODING_DICTIONARY, ENC_AND_DEC
+from dictionaries import *
 
 # ================================
 # = Setting const and global variables
 # ================================
 
-VERSION = "1.9.8"
+VERSION = "2.0"
 
 SCHEME = "dark"
 THEME = f"{SCHEME}-blue"
@@ -73,13 +74,13 @@ def resource_path(relative_path):
 # ================================
 cln_img_rel = resource_path(os.path.join(IMAGES_DIR, "Clean.png"))
 cpy_img_rel = resource_path(os.path.join(IMAGES_DIR, "CappyAndPaste.png"))
-pst_img_rel = resource_path(os.path.join(IMAGES_DIR, "ClipBoard.png"))
+rvt_img_rel = resource_path(os.path.join(IMAGES_DIR, "Revert.png"))
 pil_cln = Image.open(cln_img_rel)
 pil_cpy = Image.open(cpy_img_rel)
-pil_pst = Image.open(pst_img_rel)
+pil_rvt = Image.open(rvt_img_rel)
 CLEAN_IMG = ctk.CTkImage(pil_cln, pil_cln, (50, 50))
-PASTE_IMG = ctk.CTkImage(pil_pst, pil_pst, (50, 60))
 COPY_IMG = ctk.CTkImage(pil_cpy, pil_cpy, (50, 60))
+PASTE_IMG = ctk.CTkImage(pil_rvt, pil_rvt, (50, 50))
 
 class SMOCleaner(ctk.CTk):
     def __init__(self):
@@ -113,7 +114,7 @@ class SMOCleaner(ctk.CTk):
         # button management
         self.btn_clean = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=CLEAN_IMG, command=self.generate_output_from_input)
         self.btn_copy = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=COPY_IMG, command=self.copy)
-        self.btn_paste = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=PASTE_IMG, command=self.paste_input)
+        self.btn_paste = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=PASTE_IMG, command=self.revert_output)
         self.btn_clean.place(relx=0.25, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
         self.btn_copy.place(relx=0.50, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
         self.btn_paste.place(relx=0.75, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
@@ -153,8 +154,8 @@ class SMOCleaner(ctk.CTk):
         self.frame_buttons.place(relx=0, rely=0.35, relwidth=1, relheight=0.2)
         self.frame_output.place(relx=0, rely=0.6, relwidth=1, relheight=0.5)
 
-        self.title(f"SMO Cleaner v{VERSION} - Have a lovely day!")
-        self.geometry("600x800")
+        self.title(f"SMO Cleaner v{VERSION} - {random.choice(MOTD)}")
+        self.geometry("800x800")
 
     def normalize(self, text: str):
         """
@@ -198,11 +199,21 @@ class SMOCleaner(ctk.CTk):
         self.clipboard_clear()
         self.clipboard_append(self.txt_out_icons.get("0.0", END))
     
-    def paste_input(self):
+    def revert_output(self):
         """
-        Pastest the user's clipboard to the input text box.
+        Replaces the text in the "Raw Text" field with the given
+        text, but decodes all encoded special characters to their
+        byte sequences.
         """
-        self.txt_in.insert("end", self.clipboard_get())
+        encoded_text = self.txt_out_editable.get("1.0", END)
+        raw_text = encoded_text
+        
+        for key, val in ENC_AND_DEC.items():
+            raw_text = raw_text.replace(val, ENCODING_DICTIONARY[key]["kuriimu"])
+
+        # clearing and then setting the new text
+        self.txt_in.delete("1.0", END)
+        self.txt_in.insert("1.0", raw_text)
 
     def add_icon(self, line_num, index, image_path):
         """
