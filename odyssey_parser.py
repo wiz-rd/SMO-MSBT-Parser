@@ -15,10 +15,12 @@ from icons import ENCODING_DICTIONARY, ENC_AND_DEC
 # = Setting const and global variables
 # ================================
 
-VERSION = "1.9.5"
+VERSION = "1.9.8"
 
 SCHEME = "dark"
 THEME = f"{SCHEME}-blue"
+
+END = "end-1c"
 
 ctk.set_appearance_mode(SCHEME)
 ctk.set_default_color_theme(THEME)
@@ -95,40 +97,60 @@ class SMOCleaner(ctk.CTk):
         self.frame_input = ctk.CTkFrame(self)
         self.frame_buttons = ctk.CTkFrame(self)
         self.frame_output = ctk.CTkFrame(self)
+        self.frame_output_icons = ctk.CTkFrame(self.frame_output)
+        self.frame_output_editable = ctk.CTkFrame(self.frame_output)
 
         # application title (not window title)
         self.lbl_title = ctk.CTkLabel(self.frame_header, text=f"SMO Text Cleaner v{VERSION}", font=("TkDefaultFont", FONT_SIZE + 10))
         self.lbl_title.pack()
 
         # input management
-        self.lbl_in = ctk.CTkLabel(self.frame_input, text="Input", font=("TkDefaultFont", FONT_SIZE))
+        self.lbl_in = ctk.CTkLabel(self.frame_input, text="Raw Text", font=("TkDefaultFont", FONT_SIZE))
         self.txt_in = ctk.CTkTextbox(self.frame_input, corner_radius=CORNER_RADIUS)
         self.lbl_in.pack()
         self.txt_in.pack(fill=ctk.BOTH, padx=40, pady=10)
 
         # button management
-        self.btn_clean = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=CLEAN_IMG, command=self.add_icons)
+        self.btn_clean = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=CLEAN_IMG, command=self.generate_output_from_input)
         self.btn_copy = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=COPY_IMG, command=self.copy)
         self.btn_paste = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=PASTE_IMG, command=self.paste_input)
         self.btn_clean.place(relx=0.25, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
         self.btn_copy.place(relx=0.50, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
         self.btn_paste.place(relx=0.75, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
 
+        # -----------------
         # output management
-        self.lbl_out = ctk.CTkLabel(self.frame_output, text="Output", font=("TkDefaultFont", FONT_SIZE))
-        self.txt_out_icons = ctk.CTkTextbox(self.frame_output, corner_radius=CORNER_RADIUS)
-        self.txt_out_editable = ctk.CTkTextbox(self.frame_output, corner_radius=CORNER_RADIUS)
-        self.lbl_out.pack()
+        # ICONS
+        # (the output box that cannot be edited
+        # and that will render in-game text)
+        self.lbl_out_icons = ctk.CTkLabel(self.frame_output_icons, text="In-game Output", font=("TkDefaultFont", FONT_SIZE))
+        self.txt_out_icons = ctk.CTkTextbox(self.frame_output_icons, corner_radius=CORNER_RADIUS)
+        self.lbl_out_icons.pack()
         self.txt_out_icons.pack(fill=ctk.BOTH, padx=40, pady=10)
+
+        # EDITABLE
+        # (the box that CAN be edited
+        # and that will allow the user to shift
+        # around the icons by moving special characters)
+        self.lbl_out_editable = ctk.CTkLabel(self.frame_output_editable, text="Encoded Editor", font=("TkDefaultFont", FONT_SIZE))
+        self.txt_out_editable = ctk.CTkTextbox(self.frame_output_editable, corner_radius=CORNER_RADIUS)
+        self.lbl_out_editable.pack()
+        self.txt_out_editable.pack(fill=ctk.BOTH, padx=40, pady=10)
+        self.txt_out_editable.bind("<FocusOut>", command=self.update_icons)
+        self.txt_out_editable.bind("<Control-Return>", command=self.update_icons)
 
         # disabling the output text box so people can't edit it
         # and won't accidentally get their text deleted from here
         self.txt_out_icons.configure(state="disabled")
 
+        self.frame_output_icons.place(relx=0, rely=0, relwidth=0.5, relheight=1)
+        self.frame_output_editable.place(relx=0.5, rely=0, relwidth=0.5, relheight=1)
+        # -----------------
+
         # grid-ing everything in order
         self.frame_header.place(relx=0, rely=0, relwidth=1, relheight=0.1)
         self.frame_input.place(relx=0, rely=0.1, relwidth=1, relheight=0.5)
-        self.frame_buttons.place(relx=0, rely=0.4, relwidth=1, relheight=0.2)
+        self.frame_buttons.place(relx=0, rely=0.35, relwidth=1, relheight=0.2)
         self.frame_output.place(relx=0, rely=0.6, relwidth=1, relheight=0.5)
 
         self.title(f"SMO Cleaner v{VERSION} - Have a lovely day!")
@@ -174,7 +196,7 @@ class SMOCleaner(ctk.CTk):
         Copies the output text to the user's clipboard.
         """
         self.clipboard_clear()
-        self.clipboard_append(self.txt_out_icons.get("0.0", "end-1c"))
+        self.clipboard_append(self.txt_out_icons.get("0.0", END))
     
     def paste_input(self):
         """
@@ -215,17 +237,46 @@ class SMOCleaner(ctk.CTk):
         
         return text_to_encode
 
-    def add_icons(self):
+    def render_output_editable(self, text: str):
+        """
+        Render the second output - the editable one - after cleaning it up
+        and set it up to reflect the icons.
+        """
+        # clear output
+        self.txt_out_editable.delete("1.0", END)
+        # update output
+        self.txt_out_editable.insert("1.0", text)
+
+        # toggle it as "not edited" - this will allow
+        # us to detect future updates and to update
+        # the icon output dynamically
+        # self.txt_out_editable.edit_modified(False)
+
+    def generate_output_from_input(self, generate_from_editable: bool = False):
         """
         Replaces specific special characters
         with icons in one of the output strings.
         """
         # first, encode
-        input_text = self.txt_in.get("1.0", ctk.END)
+        if not generate_from_editable:
+            # if no changes made to editable - e.g.
+            # if the user expects to just clean the text
+            # do so
+            input_text = self.txt_in.get("1.0", END)
+        elif generate_from_editable:
+            # if the user has made a change to editable
+            # use the editable contents instead
+            input_text = self.txt_out_editable.get("1.0", END)
+
         self.txt_out_icons.configure(state="normal")
         encoded_text = self.encode(input_text)
 
-        # then, remove all unwanted special chars
+        # then, render the encoded text to be editable
+        self.render_output_editable(encoded_text)
+
+        # otherwise, ignore editable field
+        # and remove all unwanted special chars from
+        # normal output
         cleaned_text = self.cleanup(encoded_text)
 
         # equate the two so _icons can be modified
@@ -237,7 +288,7 @@ class SMOCleaner(ctk.CTk):
 
         # clearing the output here so that
         # adding the icons won't cause any problems
-        self.txt_out_icons.delete("1.0", ctk.END)
+        self.txt_out_icons.delete("1.0", END)
         self.txt_out_icons.insert("1.0", output_text_icons)
 
         # swapping encoded chars for icons
@@ -250,9 +301,32 @@ class SMOCleaner(ctk.CTk):
         for line_num, line in enumerate(cleaned_text.split("\n"), start=1):
             for letter_num, letter in enumerate(line):
                 if letter in ENC_AND_DEC.values():
-                    self.add_icon(line_num, letter_num, resource_path(os.path.join(IMAGES_DIR, f"{ENC_AND_DEC.inverse[letter]}.png")))
+                    try:
+                        self.add_icon(line_num, letter_num, resource_path(os.path.join(IMAGES_DIR, f"{ENC_AND_DEC.inverse[letter]}.png")))
+                    except FileNotFoundError:
+                        alert = ctk.CTkInputDialog(title="Err", text=f"Icon not found: {os.path.join(IMAGES_DIR, ENC_AND_DEC.inverse[letter])}.png")
+                        self.wait_window(alert)
+                        print(f"ERR: icon {os.path.join(IMAGES_DIR, ENC_AND_DEC.inverse[letter])}.png not found")
 
         self.txt_out_icons.configure(state="disabled")
+    
+    def update_icons(self, name_of_event):
+        """
+        Updates the icon output after the user moved around the
+        encoded text in "Encoded Editor".
+
+        - name_of_event is a required argument and lists the event in question.
+        
+        I don't know why. This seems to just be "<FocusOut event>", which is exactly
+        what I want, so I recommend you just treat it as though this variable does not exist.
+        """
+        # generate the output again, but this time
+        # don't change the
+        self.generate_output_from_input(generate_from_editable=True)
+
+        # returning "break" prevents things like "ctrl + enter"
+        # from putting a newline, which is exactly what we want
+        return "break"
 
 
 # ================================

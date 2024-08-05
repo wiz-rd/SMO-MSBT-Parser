@@ -23,6 +23,9 @@ ENC_AND_DEC = bidict({
     "Cappy": "Ḉ",
     "Frog": "ʄ",
     "Globe": "Ꝍ",
+    # TODO: see if it's possible to differentiate between
+    # the types of purple coins. I can't seem to find
+    # any way to do so at this time.
     "Purple": "Ꝕ",
     "Checkpoint": "ↆ",
     "Odyssey": "Ơ",
