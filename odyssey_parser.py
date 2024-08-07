@@ -20,6 +20,7 @@ VERSION = "2.0"
 
 SCHEME = "dark"
 THEME = f"{SCHEME}-blue"
+SEPARATION_CHAR = "|"
 
 END = "end-1c"
 
@@ -184,11 +185,15 @@ class SMOCleaner(ctk.CTk):
         spcl_chars = list(ENC_AND_DEC.values())
         spcl_str = "".join(spcl_chars)
 
-        regex_filter_out = re.compile(f"(?<![<])<null>(?![>])|[^{spcl_str}':;,\s\.\!?a-zA-Z0-9]|[{MISSED_BYTES}]")
+        # used to replace all duplicate |||||| with one, and only one, |
 
         # actually cleaning output
-        output_text = regex_filter_out.sub(" ", text)
+        output_text = re.sub(f"(?<![<])<null>(?![>])|[^{spcl_str}\-':;,\s\.\!?a-zA-Z0-9]|[{MISSED_BYTES}]", SEPARATION_CHAR, text)
         output_text = self.normalize(output_text)
+        print(output_text)
+        output_text = re.sub(r"\|{2,}", "|", output_text)
+        # regex_locate_bars = re.findall(r"(\w\|)|(\|+)", output_text)
+        print(output_text)
 
         return output_text
     
