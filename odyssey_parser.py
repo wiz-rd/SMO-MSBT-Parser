@@ -192,7 +192,17 @@ class SMOCleaner(ctk.CTk):
         output_text = self.normalize(output_text)
         print(output_text)
         output_text = re.sub(r"\|{2,}", "|", output_text)
-        # regex_locate_bars = re.findall(r"(\w\|)|(\|+)", output_text)
+
+        # adds newlines for each FINAL special character (used a |
+        # in this context) in a group, this way it's more readable.
+        cleanup_text_further = re.findall(r"(?s)\|.[^\|]", output_text)
+
+        for occurrance in cleanup_text_further:
+            # cut off the bar and replace it with a newline
+            output_text = output_text.replace(occurrance, f"\n{occurrance[1:]}", 1)
+
+        output_text = output_text.replace("|", "")
+
         print(output_text)
 
         return output_text
