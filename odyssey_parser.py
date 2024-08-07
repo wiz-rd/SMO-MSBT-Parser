@@ -11,6 +11,7 @@ import customtkinter as ctk  # type: ignore
 
 # helper files
 from dictionaries import *
+from translate import translate
 
 # ================================
 # = Setting const and global variables
@@ -76,12 +77,15 @@ def resource_path(relative_path):
 cln_img_rel = resource_path(os.path.join(IMAGES_DIR, "Clean.png"))
 cpy_img_rel = resource_path(os.path.join(IMAGES_DIR, "CappyAndPaste.png"))
 rvt_img_rel = resource_path(os.path.join(IMAGES_DIR, "Revert.png"))
+trt_img_rel = resource_path(os.path.join(IMAGES_DIR, "ClipBoard.png"))
 pil_cln = Image.open(cln_img_rel)
 pil_cpy = Image.open(cpy_img_rel)
 pil_rvt = Image.open(rvt_img_rel)
+pil_trt = Image.open(trt_img_rel)
 CLEAN_IMG = ctk.CTkImage(pil_cln, pil_cln, (50, 50))
 COPY_IMG = ctk.CTkImage(pil_cpy, pil_cpy, (50, 60))
 PASTE_IMG = ctk.CTkImage(pil_rvt, pil_rvt, (50, 50))
+TRT_IMG = ctk.CTkImage(pil_trt, pil_trt, (50, 60))
 
 class SMOCleaner(ctk.CTk):
     def __init__(self):
@@ -116,9 +120,11 @@ class SMOCleaner(ctk.CTk):
         self.btn_clean = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=CLEAN_IMG, command=self.generate_output_from_input)
         self.btn_copy = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=COPY_IMG, command=self.copy)
         self.btn_paste = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=PASTE_IMG, command=self.revert_output)
-        self.btn_clean.place(relx=0.25, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
-        self.btn_copy.place(relx=0.50, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
-        self.btn_paste.place(relx=0.75, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
+        self.btn_translate = ctk.CTkButton(self.frame_buttons, text="", corner_radius=CORNER_RADIUS, image=TRT_IMG, command=self.translate)
+        self.btn_clean.place(relx=0.20, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
+        self.btn_copy.place(relx=0.40, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
+        self.btn_paste.place(relx=0.60, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
+        self.btn_translate.place(relx=0.80, rely=0.5, relwidth=0.15, relheight=0.75, anchor="center")
 
         # -----------------
         # output management
@@ -157,6 +163,17 @@ class SMOCleaner(ctk.CTk):
 
         self.title(f"SMO Cleaner v{VERSION} - {random.choice(MOTD)}")
         self.geometry("800x800")
+
+    def translate(self):
+        """
+        Grabs the text from the output box and provides it to
+        the translate function.
+        """
+        input_txt = self.txt_out_icons.get("1.0", END)
+        output = translate(re.split(r"[\.\!\,\-\?\n]+", input_txt))
+
+        # append the output to the "editable icons" box so icons can be moved around
+        self.txt_out_editable.insert("1.0", output + "\n\n")
 
     def normalize(self, text: str):
         """
