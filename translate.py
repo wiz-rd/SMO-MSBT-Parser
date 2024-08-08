@@ -2,7 +2,7 @@ import random
 from googletrans import Translator
 
 def translate(string: list[str]) -> list[str]:
-
+    COUNT = 10
     
     # List of languages to translate to
     languages = ["af","sq","am","ar","hy","az","eu","bn","bs","bg","ca","ceb","zh-CN","zh-TW","co","hr","cs","da","nl",
@@ -20,8 +20,8 @@ def translate(string: list[str]) -> list[str]:
     for text in string:
         translated_text = text
         
-        # Translate the string 60 times into random languages
-        for _ in range(60):
+        # Translate the string into random languages COUNT times
+        for _ in range(COUNT):
             target_language = random.choice(languages)
             print(f"Translating '{translated_text}' to {target_language}")
             translated_text = translator.translate(translated_text, dest=target_language).text

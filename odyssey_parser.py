@@ -170,10 +170,13 @@ class SMOCleaner(ctk.CTk):
         the translate function.
         """
         input_txt = self.txt_out_icons.get("1.0", END)
-        output = translate(re.split(r"[\.\!\,\-\?\n]+", input_txt))
+        output = translate(re.split(r"[\.\!\,\-\?\n\|]+", input_txt))
+
+        # clear editable text field
+        self.txt_out_editable.delete("1.0", END)
 
         # append the output to the "editable icons" box so icons can be moved around
-        self.txt_out_editable.insert("1.0", output + "\n\n")
+        self.txt_out_editable.insert("1.0", "".join(output) + "\n\n")
 
     def normalize(self, text: str):
         """
