@@ -21,6 +21,7 @@ VERSION = "2.0"
 SCHEME = "dark"
 THEME = f"{SCHEME}-blue"
 SEPARATION_CHAR = "|"
+INCLUDE_TITLES = False
 
 END = "end-1c"
 
@@ -198,34 +199,27 @@ class SMOCleaner(ctk.CTk):
         # used to replace all duplicate |||||| with one, and only one, |
         output_text = re.sub(r"\|{2,}", "|", output_text)
 
-        # adds newlines for each FINAL special character (used a |
-        # in this context) in a group, this way it's more readable.
+        # preparing this as it'll be used at least once
+        find_char_groups = re.compile(r"\|(?:\S+?\|)+")
 
-        # find each group of bars and characters, e.g.
-        # |h|e|l|l|oI'd like to fly |a|w|a|y|from here.
-        # "|h|e|l|l|o|" is group one and "|a|w|a|y|" is group 2
-        cleanup_text_further = re.findall(r"\|\S+?\s", output_text)
-        # finds the last three characters of each group
-        # so the previous example would be a list of
-        # ["|I'", "|fr"]
-        # this seems useless but essentially it lets me put newlines
-        # at the end of each group, making the output far more readable
-        last_three_chars = re.findall(r"(?s)\|.[^\|]", output_text)
-        # both of these lists should be the same length
+        # if the things like CapTalk032 should appear in output
+        if INCLUDE_TITLES:
+            # adds newlines for each FINAL special character (used a |
+            # in this context) in a group, this way it's more readable.
 
-        if len(cleanup_text_further) != len(last_three_chars):
-            print("The lengths of Regex groups are not the same.")
-            print("This is an issue. Please try and fix it :(")
-
-        # NOTE: this does NOT actually render in the game
-        # so I'm unsure if I should just delete it or what.
-        # TODO: Decide this.
-
-        for index, occurrance in enumerate(cleanup_text_further):
-            # replace the first bar with a newline
-            output_text = output_text.replace(occurrance, f"\n{occurrance}", 1)
-            # cut off the last bar and replace it with a newline
-            output_text = output_text.replace(last_three_chars[index], f"\n{last_three_chars[index][1:]}", 1)
+            # find each group of bars and characters, e.g.
+            # |h|e|l|l|oI'd like to fly |a|w|a|y|from here.
+            # "|h|e|l|l|o|" is group one and "|a|w|a|y|" is group 2
+            cleanup_text_further = find_char_groups.findall(output_text)
+    
+            for occurrance in cleanup_text_further:
+                # replace the first bar with a newline
+                output_text = output_text.replace(occurrance, f"\n{occurrance}\n", 1)
+        else:
+            # replace all groups of characters with empty strings
+            # so as to clean up the remainder of the output
+            output_text = find_char_groups.sub("", output_text)
+            pass
 
         # cleaning up all unwanted characters that are no longer needed for parsing
         output_text = output_text.replace("|", "").strip()
