@@ -2,7 +2,7 @@ import random
 from googletrans import Translator
 
 def translate(string: list[str]) -> list[str]:
-    COUNT = 10
+    COUNT = 60
     
     # List of languages to translate to
     languages = ["af","sq","am","ar","hy","az","eu","bn","bs","bg","ca","ceb","zh-CN","zh-TW","co","hr","cs","da","nl",
@@ -33,3 +33,20 @@ def translate(string: list[str]) -> list[str]:
         translated_strings.append(translated_text)
     
     return translated_strings
+
+if __name__ == "__main__":
+    # testing it to make sure it works
+    test_strings = [
+        "This is a test message, yes? I sure hope it isn't a cowboy or cobweb.",
+        "Why I'll be darned, if it isn't yet another landlubber.",
+        "Hi! How did you get here so quickly? I thought you were a burst of lightning for a second there."
+    ]
+
+    outputs = translate(test_strings)
+
+    print("+" * 10, "Final results:", "+" * 10)
+    print("Original messages:")
+    print(*test_strings, sep="\n")
+    print("-" * 20)
+    print("Translated messages:")
+    print(*outputs, sep="\n")

@@ -4,6 +4,7 @@ import re
 import os
 import sys
 import random
+import threading
 
 # third party libraries
 from PIL import Image  # type: ignore
@@ -170,13 +171,26 @@ class SMOCleaner(ctk.CTk):
         the translate function.
         """
         input_txt = self.txt_out_icons.get("1.0", END)
-        output = translate(re.split(r"[\.\!\,\-\?\n\|]+", input_txt))
+
+        # remove everything that isn't a "normal" character
+        input_txt = re.sub(r"[^\w\.\!\,\-\?\s]", "", input_txt)
+
+        # split the input up by punctuation and newlines
+        input_txt = re.split(r"[\.\!\,\-\?\n\|]+", input_txt)
+        print(f"Sending\n\n{input_txt}\n\n to the translator.")
+
+        # remove all empty strings
+        # not doing this breaks the translation code
+        input_txt = [x for x in input_txt if x != ""]
+
+        output = translate(input_txt)
 
         # clear editable text field
         self.txt_out_editable.delete("1.0", END)
 
         # append the output to the "editable icons" box so icons can be moved around
-        self.txt_out_editable.insert("1.0", "".join(output) + "\n\n")
+        self.txt_out_editable.insert("1.0", "\n".join(output))
+        return
 
     def normalize(self, text: str):
         """
