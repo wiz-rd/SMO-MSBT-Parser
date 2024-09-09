@@ -189,7 +189,7 @@ class SMOCleaner(ctk.CTk):
         # actually cleaning output
         # remove everything except the special characters
         # that I outlined before, to be used for in-game icons
-        output_text = re.sub(f"(?<![<])<null>(?![>])|[^{spcl_str}\-':;,\s\.\!?a-zA-Z0-9]|[{MISSED_BYTES}]", SEPARATION_CHAR, text)
+        output_text = re.sub(f"(?<![<])<null>(?![>])|[^{spcl_str}\-—':;,\s\.\!?a-zA-Z0-9]|[{MISSED_BYTES}]", SEPARATION_CHAR, text)
 
         # see normalize function - just removes double spaces
         # and double newlines, essentially
