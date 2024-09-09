@@ -32,6 +32,19 @@ ENC_AND_DEC = bidict({
     "Coin": "Ȼ",
 })
 
+
+# this will be used to color output text
+FUTURE_FORMATTING = {
+    "yellow_start": {
+        "kuriimu": "<null><null>",
+        "bytes": b"\x00\x00"
+    },
+    "yellow_end": {
+        "kuriimu": "<null>ÿÿ",
+        "bytes": b"\x00\xc3\xbf\xc3\xbf"
+    }
+}
+
 ENCODING_DICTIONARY = \
 {
     "Mario": {
